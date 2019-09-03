@@ -18,6 +18,7 @@ public class TryCatch {
             System.out.println("C");
         }finally {
             System.out.println("D");
+            System.out.println("tijiaoceshi");
         }
     }
 }
