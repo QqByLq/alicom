@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>运动会报名信息</title>
+    <link rel="stylesheet" type="text/css" href="/easyUI/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/easyUI/themes/icon.css">
+    <script type="text/javascript" src="/easyUI/jquery.min.js"></script>
+    <script type="text/javascript" src="/easyUI/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/easyUI/jquery.serializejson.min.js"></script>
+    <script type="text/javascript" src="/easyUI/date.js"></script>
+    <!--语言包-->
+    <script type="text/javascript" src="/easyUI/locale/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript">
+
+        var method;
+
+        //删除
+        function del(aid){
+            $.messager.confirm("询问","确认删除吗？",function (val) {
+                if (val){
+                    $.ajax({
+                        url:"/apply/delete.action?aid="+aid,
+                        dataType:"json",
+                        success:function (data) {
+                            $.messager.alert("提示",data.message)
+                            if (data.status=="ok"){
+                                $("#dg").datagrid("reload")
+                            }
+                        }
+                    })
+                }
+            })
+        }
+
+        //编辑前 获取信息
+        function edit(aid){
+            method = "update";
+            $("#editWindow").window("open");
+
+            $("#editForm").form("load","/apply/get.action?aid="+aid);
+
+        }
+
+
+        $(function () {
+            $('#dg').datagrid({
+                url:'/apply/search.action',
+                columns:[[
+                    {field:'aid',title:'编号',width:100,align:'center'},
+                    {field:'sid',title:'学号',width:100,align:'center'},
+                    {field:'sname',title:'姓名',width:100,align:'center'},
+                    {field: 'sex', title: '性别', width: 100, align: 'center',formatter:function (value) {
+                            return value=="0"?"男":"女";
+                        }},
+
+                    {field:'project',title:'项目名称',width:100,align:'center',formatter:function (value) {
+                            if (value!=null){
+                                return value.pname;
+                            }else {
+                                return "";
+                            }
+                        }},
+                    {field:'place',title:'场地',width:100,align:'center',formatter:function (value) {
+                             if (value!=null){
+                                 return value.ename;
+                            }else {
+                                 return "";
+                            }
+                        }},
+                    {field:'-',title:'操作',width:100,align:'center',formatter:function (value,row,index) {
+                            return "<a href='javascript:void(0)' onclick='del("+row.aid+")'>删除</a>&nbsp;<a href='javascript:void(0)' onclick='edit("+row.aid+")'>编辑</a>"
+
+                        }}
+                ]],
+                singleSelect:true,
+                pagination:true,
+                //弹窗  添加
+                toolbar:[{
+                    iconCls:'icon-add',
+                    text:"增加",
+                    handler:function () {
+                        method="add";
+                        //清空表单数据
+                        $("#editForm").form("clear");
+                        $("#editWindow").window("open");
+
+                    }
+                }]
+
+            });
+
+            $("#clickSearch").click(function () {
+                var formJson = $("#formsearch").serializeJSON();
+                //alert(JSON.stringify(formJson));
+                $("#dg").datagrid("load",formJson);
+            })
+
+            //点击按钮“确认”事件 ：增加和修改
+            $("#btnEdit").click(function () {
+                var formJson = $("#editForm").serializeJSON();
+                $.ajax({
+                    url:"/apply/"+method+".action",
+                    type:"post",
+                    data:formJson,
+                    dataType:"json",
+                    success:function (data) {
+                        if (data.status=="ok"){
+                            $("#editForm").form("clear");
+                            $("#editWindow").window("close");
+                            $("#dg").datagrid("reload");
+                        }else if (data.status=="not ok"){
+                            alert(data.message);
+                            $("#editWindow").window("close");
+                            $("#dg").datagrid("reload");
+                        }
+
+                    }
+                })
+            })
+
+        })
+    </script>
+</head>
+<body>
+<h2></h2>
+<p></p>
+<div  class="easyui-panel">
+    <form id="formsearch">
+        姓名：<input type="text" name="sname">
+        比赛场地：<input type="text" name="eid"  class="easyui-combobox" data-options="url:'/place/search.action',valueField:'eid', textField:'ename',  missingMessage:'请选择类型'"/>
+        比赛项目：<input type="text" name="pid"  class="easyui-combobox" data-options="url:'/project/search.action',valueField:'pid', textField:'pname',  missingMessage:'请选择类型'"/>
+        <input type="button" value="查询" id="clickSearch">
+    </form>
+</div>
+
+<div id="editWindow" class="easyui-window" title="信息编辑" style="width: 300px;height: 300px"
+     data-options="closed:true">
+    <form id="editForm">
+        <table style="margin: 20px auto">
+            <input type="hidden" name="aid">
+            <tr><td>学号：</td><td><input type="text" name="sid"/></td></tr>
+            <tr><td>姓名：</td><td><input type="text" name="sname"/></td></tr>
+            <tr><td>性别：</td><td>
+                <label><input type="radio" name="sex" value="0" />男</label>
+                <label><input type="radio" name="sex" value='1' />女</label></td></tr>
+            <tr><td>场地：</td><td><input type="text" name="eid"  class="easyui-combobox" data-options="url:'/place/search.action',valueField:'eid', textField:'ename',  missingMessage:'请选择类型'"/></td></tr>
+            <tr><td>项目：</td><td><input type="text" name="pid" class="easyui-combobox" data-options="url:'/project/search.action',valueField:'pid', textField:'pname',  missingMessage:'请选择类型'"/></td></tr>
+
+            <tr><td colspan="2" align="center">
+                <input type="button" value="确认" id="btnEdit"/>
+            </td></tr>
+        </table>
+
+    </form>
+</div>
+
+<table id="dg"></table>
+
+</body>
+</html>
