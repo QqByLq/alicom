@@ -19,7 +19,7 @@ public class TryCatch {
         }finally {
             System.out.println("D");
             System.out.println("tijiaoceshi");
-            System.out.println("update");
+            System.out.println("update1212");
         }
     }
 }
