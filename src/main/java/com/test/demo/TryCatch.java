@@ -19,6 +19,7 @@ public class TryCatch {
         }finally {
             System.out.println("D");
             System.out.println("tijiaoceshi");
+            System.out.println("update");
         }
     }
 }
